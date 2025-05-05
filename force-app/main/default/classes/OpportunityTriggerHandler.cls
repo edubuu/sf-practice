@@ -7,19 +7,16 @@ public with sharing class OpportunityTriggerHandler {
             isTriggerExecuted = true;
         }
     }
-    public static void handleBeforeInsert(Map<Id, Opportunity> newMap){
-        if (!isTriggerExecuted) {
-            verifyCreditLimit(newMap, null);
-            isTriggerExecuted = true;
-        }
-    }
+    
 
     private static void verifyCreditLimit(Map<Id,Opportunity> newMap, Map<Id, Opportunity> oldMap){
         Set<Id> accToVerify = new Set<Id>();
+        Map<Id, Opportunity> oppsFiltered = new Map <Id,Opportunity>();
 
         for(Opportunity o : newMap.values()){
-            if(o.StageName == 'Closed Won' && (oldMap == null || oldMap.get(o.Id).StageName != 'Closed Won')){
-                accToVerify.add(o.AccountId);
+            if(o.StageName == 'Closed Won' && oldMap.get(o.Id).StageName != 'Closed Won' && o.AccountId != null){                
+            	accToVerify.add(o.AccountId);
+                oppsFiltered.put(o.Id, o);
             }
         }
 
@@ -34,16 +31,27 @@ public with sharing class OpportunityTriggerHandler {
         }
 
         List<Credit_Limit__c> creditsToUpdate = new List<Credit_Limit__c>();
-        for(Opportunity o : newMap.values()){
+        
+        for(Opportunity o : oppsFiltered.values()){
+
             Credit_Limit__c cl = creditLimits.get(o.AccountId);
-            if(o.StageName == 'Closed Won' && (oldMap == null || oldMap.get(o.Id).StageName != 'Closed Won')){
-                Decimal newValue = o.Amount + cl.Used_Credit__c;
-                if(newValue > cl.Max_Credit__c){
-                    o.addError('Not enough credit');
-                }else{
-                    cl.Used_Credit__c = newValue;
-                    creditsToUpdate.add(cl);
-                }
+
+            if (cl == null) {
+                o.addError('No credit limit record found for this account.');
+                continue;
+            }    
+
+            Decimal oppAmount = o.Amount != null ? o.Amount : 0;
+            Decimal usedCredit = cl.Used_Credit__c != null ? cl.Used_Credit__c : 0;
+            Decimal maxCredit = cl.Max_Credit__c != null ? cl.Max_Credit__c : 0;
+
+            Decimal newValue = oppAmount + usedCredit;
+
+            if (newValue > maxCredit) {
+                o.addError('No hay suficiente crédito disponible.');
+            } else {
+                cl.Used_Credit__c = newValue;
+                creditsToUpdate.add(cl);
             }
         }
 
