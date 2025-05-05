@@ -1,22 +1,29 @@
 public with sharing class OpportunityTriggerHandler {
     public static boolean isTriggerExecuted = false;
 
-    public static void handleBeforeUpdate(Map<Id, Opportunity> newMap, Map<Id, Opportunity> oldMap){
+    public static void handleBeforeUpdate(List<Opportunity> oppsList){
         if(!isTriggerExecuted){
-            verifyCreditLimit(newMap, oldMap);
+            verifyCreditLimit(oppsList);
             isTriggerExecuted = true;
         }
     }
-    
 
-    private static void verifyCreditLimit(Map<Id,Opportunity> newMap, Map<Id, Opportunity> oldMap){
+    public static void handleBeforeInsert(List<Opportunity> oppsList){
+        if(!isTriggerExecuted){
+            verifyCreditLimit(oppsList);
+            isTriggerExecuted = true;
+        }
+    }
+
+    private static void verifyCreditLimit(List<Opportunity> oppsList){
         Set<Id> accToVerify = new Set<Id>();
-        Map<Id, Opportunity> oppsFiltered = new Map <Id,Opportunity>();
-
-        for(Opportunity o : newMap.values()){
-            if(o.StageName == 'Closed Won' && oldMap.get(o.Id).StageName != 'Closed Won' && o.AccountId != null){                
+        //Map<Id, Opportunity> oppsFiltered = new Map <Id,Opportunity>();
+        List<Opportunity> oppsFiltered = new List<Opportunity>();
+    
+        for(Opportunity o : oppsList){
+            if(o.StageName == 'Closed Won' && /*oldMap.get(o.Id).StageName != 'Closed Won' &&*/ o.AccountId != null){                
             	accToVerify.add(o.AccountId);
-                oppsFiltered.put(o.Id, o);
+                oppsFiltered.add(o);
             }
         }
 
@@ -32,7 +39,7 @@ public with sharing class OpportunityTriggerHandler {
 
         List<Credit_Limit__c> creditsToUpdate = new List<Credit_Limit__c>();
         
-        for(Opportunity o : oppsFiltered.values()){
+        for(Opportunity o : oppsFiltered){
 
             Credit_Limit__c cl = creditLimits.get(o.AccountId);
 
