@@ -15,6 +15,7 @@ public with sharing class OpportunityTriggerHandler {
         }
     }
 
+
     private static void verifyCreditLimit(List<Opportunity> oppsList){
         Set<Id> accToVerify = new Set<Id>();
         //Map<Id, Opportunity> oppsFiltered = new Map <Id,Opportunity>();
@@ -66,4 +67,5 @@ public with sharing class OpportunityTriggerHandler {
             update creditsToUpdate;
         }        
     }
+
 }

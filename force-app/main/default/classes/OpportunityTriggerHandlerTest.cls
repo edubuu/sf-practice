@@ -3,8 +3,8 @@ private class OpportunityTriggerHandlerTest {
 
     @isTest
     static void verifyCreditLimitFalse() {
-        Account acc1 = new Account(Name = 'Test Account 1');
-        insert acc1;
+        
+        Account acc1 = TestDataFactory.createAccount('TestAccount', true);
 
         Credit_Limit__c cl1 = new Credit_Limit__c(Customer__c = acc1.Id, Max_Credit__c = 100, Used_Credit__c = 100);
         insert cl1;
@@ -29,8 +29,7 @@ private class OpportunityTriggerHandlerTest {
     
     @isTest
     static void verifyCreditLimitTrue() {
-        Account acc1 = new Account(Name = 'Test Account 1');
-        insert acc1;
+        Account acc1 = TestDataFactory.createAccount('TestAccount', true);
 
         Credit_Limit__c cl1 = new Credit_Limit__c(Customer__c = acc1.Id, Max_Credit__c = 100, Used_Credit__c = 99);
         insert cl1;
